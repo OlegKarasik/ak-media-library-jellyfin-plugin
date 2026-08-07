@@ -8,6 +8,8 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     IServiceCollection serviceCollection,
     IServerApplicationHost applicationHost)
   {
+    serviceCollection.AddTransient<SeriesMetadataProvider>();
+    serviceCollection.AddTransient<SeasonMetadataProvider>();
     serviceCollection.AddTransient<EpisodeMetadataProvider>();
   }
 }

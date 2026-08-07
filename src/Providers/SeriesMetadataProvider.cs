@@ -4,22 +4,22 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 
-public class EpisodeMetadataProvider : IRemoteMetadataProvider<Episode, EpisodeInfo> 
+public class SeriesMetadataProvider : IRemoteMetadataProvider<Series, SeriesInfo> 
 {
   public string Name => "AK-Media-Library";
 
   public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(
-    EpisodeInfo searchInfo, 
+    SeriesInfo searchInfo, 
     CancellationToken cancellationToken)
   {
     return Task.FromResult(Enumerable.Empty<RemoteSearchResult>());
   }
 
-  public async Task<MetadataResult<Episode>> GetMetadata(
-    EpisodeInfo info, 
+  public async Task<MetadataResult<Series>> GetMetadata(
+    SeriesInfo info, 
     CancellationToken cancellationToken)
   {
-    var result = new MetadataResult<Episode>();
+    var result = new MetadataResult<Series>();
     if (string.IsNullOrEmpty(info.Name) || string.IsNullOrEmpty(info.Path))
     {
       // Without name of path it is impossible for us to get the metadata
@@ -27,14 +27,14 @@ public class EpisodeMetadataProvider : IRemoteMetadataProvider<Episode, EpisodeI
       return result;
     }
 
-    result.Item        = new Episode();
+    result.Item        = new Series();
     result.HasMetadata = true;
 
     // Here we fill the default set of metadata properties
     //
     this.SetDefaultProperties(result, info);
 
-    var metadataJson = await this.GetEpisodeMetadataJsonAsync(info.Path);
+    var metadataJson = await this.GetSeriesMetadataJsonAsync(info.Path);
     if (metadataJson is null)
     {
       // If there are no metadata file, then we just return the default metadata
@@ -57,8 +57,8 @@ public class EpisodeMetadataProvider : IRemoteMetadataProvider<Episode, EpisodeI
   }
 
   private void SetDefaultProperties(
-    MetadataResult<Episode> result,
-    EpisodeInfo info)
+    MetadataResult<Series> result,
+    SeriesInfo info)
   {
     ArgumentNullException.ThrowIfNull(result);
     ArgumentNullException.ThrowIfNull(info);
@@ -68,8 +68,8 @@ public class EpisodeMetadataProvider : IRemoteMetadataProvider<Episode, EpisodeI
   }
 
   private void SetJsonProperties(
-    MetadataResult<Episode> result,
-    EpisodeMetadataJson metadataJson)
+    MetadataResult<Series> result,
+    SeriesMetadataJson metadataJson)
   {
     ArgumentNullException.ThrowIfNull(result);
     ArgumentNullException.ThrowIfNull(metadataJson);
@@ -84,36 +84,21 @@ public class EpisodeMetadataProvider : IRemoteMetadataProvider<Episode, EpisodeI
       var s = $"{Environment.NewLine}-{Environment.NewLine}";
       result.Item.Overview = string.Join(s, metadataJson.Summary.Select(i => i.Trim()));
     }
-    if (metadataJson.Date is not null)
-    {
-      var dt = DateTime.ParseExact(metadataJson.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-      result.Item.ProductionYear = dt.Year;
-      result.Item.PremiereDate   = dt;
-    }
-    if (metadataJson.StartPosition is not null)
-    {
-      result.Item.IndexNumber = metadataJson.StartPosition;
-    }
-    if (metadataJson.EndPosition is not null)
-    {
-      result.Item.IndexNumberEnd = metadataJson.EndPosition;
-    }
   }
 
-  private async Task<EpisodeMetadataJson?> GetEpisodeMetadataJsonAsync(
+  private async Task<SeriesMetadataJson?> GetSeriesMetadataJsonAsync(
       string path)
   {
     ArgumentException.ThrowIfNullOrEmpty(path);
 
-    var jsonPath = $"{path}.props.json";
+    var jsonPath = $"this.props.json";
     if (!File.Exists(jsonPath))
     {
       return null;
     }
 
     await using var fs = new FileStream(jsonPath, FileMode.Open, FileAccess.Read);
-    return await JsonSerializer.DeserializeAsync<EpisodeMetadataJson>(fs);
+    return await JsonSerializer.DeserializeAsync<SeriesMetadataJson>(fs);
   }
 
 }
